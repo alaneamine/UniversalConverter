@@ -1,14 +1,13 @@
 package com.example.universalconverter
 
+// Importation des librairies nécessaires
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import kotlinx.coroutines.*
+
+// Application principale
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +28,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Interface utilisateur
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UniversalConverterApp() {
     var selectedConversion by remember { mutableStateOf("Length") }
@@ -33,140 +38,159 @@ fun UniversalConverterApp() {
     var resultValue by remember { mutableStateOf("") }
     var selectedUnitFrom by remember { mutableStateOf("") }
     var selectedUnitTo by remember { mutableStateOf("") }
-    var conversionSuccess by remember { mutableStateOf(false) }
-    var conversionError by remember { mutableStateOf(false) }
 
     MaterialTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF7F6CF)) // Couleur de fond de toute la page
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .background(Color(0xFFF7F6CF)),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Universal Converter", style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Bold), color = Color(0xFF6200EE))
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Dropdown pour le type de conversion
-            val conversionTypes = listOf("Length", "Weight", "Temperature", "Money")
-            DropdownMenu(selectedConversion, conversionTypes) { selectedConversion = it }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Champ de texte pour la valeur d'entrée
-            TextField(
-                value = inputValue,
-                onValueChange = { inputValue = it },
-                label = { Text("Enter Value") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Dropdown pour les unités côte à côte
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DropdownMenu(selectedUnitFrom, getUnitsForConversion(selectedConversion)) { selectedUnitFrom = it }
-                Spacer(modifier = Modifier.width(16.dp))
-                Text("→", style = MaterialTheme.typography.h4)
-                Spacer(modifier = Modifier.width(16.dp))
-                DropdownMenu(selectedUnitTo, getUnitsForConversion(selectedConversion)) { selectedUnitTo = it }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Bouton de conversion
-            Button(
-                onClick = {
-                    resultValue = when (selectedConversion) {
-                        "Length" -> lengthConverter(inputValue.toDoubleOrNull() ?: 0.0, selectedUnitFrom, selectedUnitTo)
-                        "Weight" -> weightConverter(inputValue.toDoubleOrNull() ?: 0.0, selectedUnitFrom, selectedUnitTo)
-                        "Temperature" -> temperatureConverter(inputValue.toDoubleOrNull() ?: 0.0, selectedUnitFrom, selectedUnitTo)
-                        "Money" -> moneyConverter(inputValue.toDoubleOrNull() ?: 0.0, selectedUnitFrom, selectedUnitTo)
-                        else -> "Invalid conversion"
-                    }
-                    conversionSuccess = resultValue.isNotEmpty()
-                    conversionError = resultValue.isEmpty()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF5784BA))
-            ) {
-                Text("Convert", color = Color.White)
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(Icons.Filled.ArrowForward, contentDescription = "Convert")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Affichage du résultat if (conversionSuccess) {
-            Text("Result: $resultValue", style = MaterialTheme.typography.h6, color = Color(0xFF4CAF50))
-
-        Spacer(modifier = Modifier.height(380.dp))
-
-        // Section de crédits
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            backgroundColor = Color(0xFF5784BA),
-            elevation = 4.dp
+                .background(Color(0xFFF3F4F6))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Credits", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text("Developed by Amine, Yanis & Saad", fontSize = 16.sp)
-                Text("©2025 UniversalConverter@estin.dz", fontSize = 14.sp)
-            }
-        }
-    }
-}
-}
+                Text("Universal Converter",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF6200EE))
 
-@Composable
-fun DropdownMenu(selected: String, items: List<String>, onItemSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
+                Spacer(modifier = Modifier.height(16.dp))
 
-    Box {
-        TextButton(onClick = { expanded = true }) {
-            Text(if (selected.isEmpty()) "Select Unit" else selected)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            items.forEach { item ->
-                DropdownMenuItem(onClick = {
-                    onItemSelected(item)
-                    expanded = false
-                }) {
-                    Text(item)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        ExposedDropdownMenuBox(selectedConversion, listOf("Length", "Weight", "Temperature", "Money")) { selectedConversion = it }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = inputValue,
+                            onValueChange = { inputValue = it },
+                            label = { Text("Enter Value") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            ExposedDropdownMenuBox(selectedUnitFrom, getUnitsForConversion(selectedConversion)) { selectedUnitFrom = it }
+                            Text("→", fontSize = 24.sp)
+                            ExposedDropdownMenuBox(selectedUnitTo, getUnitsForConversion(selectedConversion)) { selectedUnitTo = it }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val coroutineScope = rememberCoroutineScope()  // Coroutine scope
+
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            resultValue = when (selectedConversion) {
+                                "Length" -> lengthConverter(
+                                    inputValue.toDoubleOrNull() ?: 0.0,
+                                    selectedUnitFrom,
+                                    selectedUnitTo
+                                )
+
+                                "Weight" -> weightConverter(
+                                    inputValue.toDoubleOrNull() ?: 0.0,
+                                    selectedUnitFrom,
+                                    selectedUnitTo
+                                )
+
+                                "Temperature" -> temperatureConverter(
+                                    inputValue.toDoubleOrNull() ?: 0.0,
+                                    selectedUnitFrom,
+                                    selectedUnitTo
+                                )
+
+                                "Money" -> moneyConverter(
+                                    inputValue.toDoubleOrNull() ?: 0.0,
+                                    selectedUnitFrom,
+                                    selectedUnitTo
+                                )
+
+                                else -> "Invalid conversion"
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5784BA))
+                ) {
+                    Text("Convert", color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (resultValue.isNotEmpty()) {
+                    Text(resultValue, fontSize = 18.sp, color = Color(0xFF4CAF50))
                 }
             }
         }
     }
 }
 
-// Fonction pour obtenir les unités en fonction du type de conversion
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExposedDropdownMenuBox(selected: String, items: List<String>, onItemSelected: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(if (selected.isEmpty()) "Select" else selected)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            items.forEach { item ->
+                DropdownMenuItem(text = { Text(item) }, onClick = {
+                    onItemSelected(item)
+                    expanded = false
+                })
+            }
+        }
+    }
+}
+
 fun getUnitsForConversion(conversionType: String): List<String> {
     return when (conversionType) {
-        "Length" -> listOf("Meters", "Kilometers", "Centimeters", "Millimeters", "Micrometers", "Nanometers", "Miles", "Yards", "Feet", "Inches")
-        "Weight" -> listOf("Kilograms", "Grams", "Milligrams", "Micrograms", "Tonnes", "Pounds", "Ounces", "Stones")
+        "Length" -> listOf("Meters", "Kilometers", "Miles", "Yards")
+        "Weight" -> listOf("Kilograms", "Grams", "Pounds", "Ounces")
         "Temperature" -> listOf("Celsius", "Fahrenheit", "Kelvin")
-        "Money" -> listOf("USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "DZD")
+        "Money" -> listOf("USD", "AED","AFN", "ALL","AMD", "ANG", "AOA", "ARS",
+        "AUD",        "AWG",        "AZN",        "BAM",        "BBD",        "BDT",        "BGN",        "BHD",
+        "BIF",        "BMD",        "BND",        "BOB",        "BRL",        "BSD",        "BTN",        "BWP",
+        "BYN",        "BZD",        "CAD",        "CDF",        "CHF",        "CLP",        "CNY",        "COP",
+        "CRC",        "CUP",        "CVE",        "CZK",        "DJF",        "DKK",        "DOP",        "DZD",
+        "EGP",        "ERN",        "ETB",        "EUR",        "FJD",        "FKP",        "FOK",        "GBP",
+        "GEL",        "GGP",        "GHS",        "GIP",        "GMD",        "GNF",        "GTQ",        "GYD",
+        "HKD",        "HNL",        "HRK",        "HTG",        "HUF",        "IDR",        "ILS",        "IMP",
+        "INR",        "IQD",        "IRR",        "ISK",        "JEP",        "JMD",        "JOD",        "JPY",
+        "KES",        "KGS",        "KHR",        "KID",        "KMF",        "KRW",        "KWD",        "KYD",
+        "KZT",        "LAK",        "LBP",        "LKR",        "LRD",        "LSL",        "LYD",        "MAD",
+        "MDL",        "MGA",        "MKD",        "MMK",        "MNT",        "MOP",        "MRU",        "MUR",
+        "MVR",        "MWK",        "MXN",        "MYR",        "MZN",        "NAD", "NGN",        "NIO",        "NOK",
+        "NPR",        "NZD",        "OMR",        "PAB",        "PEN",        "PGK",        "PHP",        "PKR",
+        "PLN",        "PYG",        "QAR",        "RON",        "RSD",        "RUB",        "RWF",        "SAR",
+        "SBD",        "SCR",        "SDG",        "SEK",        "SGD",        "SHP",        "SLE",        "SLL",
+        "SOS",        "SRD",        "SSP",        "STN",        "SYP",        "SZL",        "THB",        "TJS",
+        "TMT",        "TND",        "TOP",        "TRY",        "TTD",        "TVD",        "TWD",        "TZS",
+        "UAH",        "UGX",        "UYU",        "UZS",        "VES",        "VND",        "VUV",        "WST",
+        "XAF",        "XCD",       "XDR",        "XOF",        "XPF",        "YER",        "ZAR",        "ZMW", "ZWL")
         else -> emptyList()
     }
 }
 
 // Fonctions de conversion
 
+// Fonction de conversion de longueur
 fun lengthConverter(value: Double, fromUnit: String, toUnit: String): String {
     val meters = when (fromUnit) {
         "Kilometers" -> value * 1000
@@ -194,6 +218,7 @@ fun lengthConverter(value: Double, fromUnit: String, toUnit: String): String {
     }
 }
 
+//Fonctions de conversion de poids
 fun weightConverter(value: Double, fromUnit: String, toUnit: String): String {
     val kilograms = when (fromUnit) {
         "Pounds" -> value * 0.453592
@@ -217,6 +242,7 @@ fun weightConverter(value: Double, fromUnit: String, toUnit: String): String {
     }
 }
 
+//Fonctions de conversion de température
 fun temperatureConverter(value: Double, fromUnit: String, toUnit: String): String {
     return when {
         fromUnit == "Celsius" && toUnit == "Fahrenheit" -> (value * 9/5 + 32).toString()
@@ -229,21 +255,16 @@ fun temperatureConverter(value: Double, fromUnit: String, toUnit: String): Strin
     }
 }
 
-fun moneyConverter(value: Double, fromUnit: String, toUnit: String): String {
-    // Exemple de conversion de devises, les taux de change doivent être mis à jour
-    val exchangeRates = mapOf(
-        "USD" to 1.0,
-        "EUR" to 0.85,
-        "GBP" to 0.75,
-        "JPY" to 110.0,
-        "AUD" to 1.35,
-        "CAD" to 1.25,
-        "CHF" to 0.92,
-        "CNY" to 6.45,
-        "SEK" to 8.5,
-        "DZD" to 130.0
-    )
+//Fonctions de conversion de monnaie
+suspend fun moneyConverter(value: Double, fromUnit: String, toUnit: String): String {
+    return try {
+        val response = withContext(Dispatchers.IO) { RetrofitInstance.api.getExchangeRates() }
+        val rates = response.conversion_rates
 
-    val baseValue = value / (exchangeRates[fromUnit] ?: 1.0)
-    return (baseValue * (exchangeRates[toUnit] ?: 1.0)).toString()
+        val baseValue = value / (rates[fromUnit] ?: return "Invalid Currency")
+        val convertedValue = baseValue * (rates[toUnit] ?: return "Invalid Currency")
+        "%.2f".format(convertedValue)
+    } catch (e: Exception) {
+        "Error fetching rates"
+    }
 }
